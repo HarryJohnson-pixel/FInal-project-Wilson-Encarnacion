@@ -1,0 +1,57 @@
+---
+title: "Final_Project"
+author: "Wilson Encarnacion"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+ev_data <- read_csv("https://data.wa.gov/api/views/f6w7-q2d2/rows.csv?accessType=DOWNLOAD")
+
+```
+#Average electric range
+```{r}
+avg_range <- ev_data %>% 
+  summarize(avg_range = mean(`Electric Range`, na.rm = TRUE))
+print(avg_range)
+```
+The average electric range of vehicles in the data is 45.56 miles. This suggests that most EVs in Washington State have a relatively modest range, which could be a result of a mix of BEVs and PHEVs.
+
+To further examine the distribution of electric range, a histogram is used:
+#Histogram
+```{r}
+ggplot(ev_data %>% drop_na(`Electric Range`), aes(x = `Electric Range`)) +
+  geom_histogram(binwidth = 10, fill = "blue", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Distribution of Electric Vehicle Ranges", 
+       x = "Electric Range (Miles)", 
+       y = "Count of Vehicles")
+
+```
+
+The histogram shows the variation in electric range across different EV models. Peaks in certain ranges may indicate popular models with specific battery capacities.
+
+#Two-sample t-test
+To test whether BEVs and PHEVs differ significantly in MSRP, a Welch Two-Sample t-test is performed:
+```{r}
+t_test_result <- t.test(`Base MSRP` ~ `Electric Vehicle Type`, data = ev_data)
+print(t_test_result)
+```
+The p-value < 2.2e-16, meaning the difference in MSRP is highly significant.
+
+BEVs have a lower average MSRP ($640.78), while PHEVs are significantly higher ($1267.24).
+
+
+#Boxplot
+The boxplot compares the distribution of the MSRP
+```{r}
+ggplot(ev_data %>% drop_na(`Base MSRP`), aes(x = `Electric Vehicle Type`, y = `Base MSRP`, fill = `Electric Vehicle Type`)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "MSRP Comparison Between BEVs and PHEVs") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
