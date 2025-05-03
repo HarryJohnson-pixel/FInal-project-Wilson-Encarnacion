@@ -1,0 +1,82 @@
+---
+title: "Final_Project"
+author: "Wilson Encarnacion"
+format: html
+editor: visual
+---
+Electric vehicles (EVs) are gaining popularity across the United States, with Washington State seeing strong adoption of both Battery Electric Vehicles (BEVs) and Plug-in Hybrid Electric Vehicles (PHEVs). In this project, EV registration in Washington is investigated using data collected from the Washington State Department of Licensing (DOL). The aim is to analyze electric range distribution and whether MSRP is significantly different in the case of BEVs and PHEVs.
+
+Data Source: Washington State EV Registration Dataset
+
+This dataset contains 239,747 records with details about registered EVs, including make, model, type, range, MSRP, and location. Below is a breakdown of the key variables:
+
+Variable Name     Type	                     Description
+Model Year:	    Numeric Discrete	    The year the vehicle model was manufactured
+Make:            Categorical	            The manufacturer or brand of the vehicle
+Model:	           Categorical	              The model name of the vehicle
+Electric Vehicle Type:	Categorical	           The type of electric vehicle (BEV or PHEV)
+CAFV Eligibility:	Categorical	           Clean Alternative Fuel Vehicle (CAFV) eligibility
+Electric Range:	  Numeric Discrete      	The range of the vehicle on electric power (in miles)
+Base MSRP	Numeric:  Continuous	             The Manufacturer's Suggested Retail Price (in USD)
+Legislative District:	Categorical	      The legislative district where the vehicle is registered
+DOL Vehicle ID:	  Numeric Discrete	             Unique identifier for the vehicle
+VIN (1-10):        	Categorical	        The first 10 characters of the Vehicle Identification Number
+
+This project investigates the following questions:
+
+What is the average electric range of vehicles in this data set?
+
+Is there a significant difference in base MSRP between BEVs and PHEVs?
+
+```{r}
+library(tidyverse)
+ev_data <- read_csv("https://data.wa.gov/api/views/f6w7-q2d2/rows.csv?accessType=DOWNLOAD")
+
+```
+#Average electric range
+```{r}
+avg_range <- ev_data %>% 
+  summarize(avg_range = mean(`Electric Range`, na.rm = TRUE))
+print(avg_range)
+```
+The average electric range of vehicles in the data is 45.56 miles. This suggests that most EVs in Washington State have a relatively modest range, which could be a result of a mix of BEVs and PHEVs.
+
+To further examine the distribution of electric range, a histogram is used:
+#Histogram
+```{r}
+ggplot(ev_data %>% drop_na(`Electric Range`), aes(x = `Electric Range`)) +
+  geom_histogram(binwidth = 10, fill = "blue", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Distribution of Electric Vehicle Ranges", 
+       x = "Electric Range (Miles)", 
+       y = "Count of Vehicles")
+
+```
+
+The histogram shows the variation in electric range across different EV models. Peaks in certain ranges may indicate popular models with specific battery capacities.
+
+#Two-sample t-test
+To test whether BEVs and PHEVs differ significantly in MSRP, a Welch Two-Sample t-test is performed:
+```{r}
+t_test_result <- t.test(`Base MSRP` ~ `Electric Vehicle Type`, data = ev_data)
+print(t_test_result)
+```
+The p-value < 2.2e-16, meaning the difference in MSRP is highly significant.
+
+BEVs have a lower average MSRP ($640.78), while PHEVs are significantly higher ($1267.24).
+
+
+#Boxplot
+The boxplot compares the distribution of the MSRP
+```{r}
+ggplot(ev_data %>% drop_na(`Base MSRP`), aes(x = `Electric Vehicle Type`, y = `Base MSRP`, fill = `Electric Vehicle Type`)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "MSRP Comparison Between BEVs and PHEVs") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+The research analyzed electric car registration in Washington focusing on electric distance and MSRP differences between PHEVs and BEVs. The findings reveal that the average electric distance of vehicles in the sample is 45.56 miles, meaning the majority of EVs registered in Washington are of average battery sizes. This means even though there are extended range EVs, most registered cars fall within a typical range sufficient for daily use. The histogram presentation maintains this, displaying electric range distribution in densities near standard. Even adding such variables as car model and year may provide better range deviations.
+
+When comparing Base MSRP between BEVs and PHEVs, there was a statistically significant difference wherein the latter had a higher MSRP mean ($1267.24) compared to BEVs ($640.78). The Welch Two-Sample t-test agreed with a p-value < 2.2e-16, decisively rejecting the null hypothesis that MSRP is the same for both types. This indicates that PHEVs, which contain both electric and gas-powered elements, are more expensive than purely electric BEVs. The boxplot visualization also emphasizes this difference, exhibiting higher variability in PHEV prices. Future research might analyze MSRP drivers such as vehicle options, battery size, or manufacturer pricing habits.
